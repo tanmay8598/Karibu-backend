@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Service = require("../models/serviceModel");
+const Vendor = require("../models/vendorModel");
 const AWS = require("aws-sdk");
-
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_KEY,
@@ -77,7 +77,7 @@ const getServices = asyncHandler(async (req, res) => {
   const { category, price, vendor, ratings } = req.query;
 
   const minprice = price ? price[0] : 0;
-  const maxprice = price ? price[1] : 25000;
+  const maxprice = price ? price[1] : 25000000000000;
 
   if (minprice || maxprice) {
     const filter = {
@@ -292,6 +292,8 @@ const searchService = asyncHandler(async (req, res) => {
   // .limit(pageSize)
   // .skip(pageSize * (page - 1));
 
+  await Vendor.populate(products, { path: "vendor" });
+
   if (products) {
     res.json(products);
   } else {
@@ -312,7 +314,7 @@ const getBestSellingServices = asyncHandler(async (req, res) => {
     .sort({ rating: -1 })
     .limit(pageSize)
     .skip(pageSize * (page - 1))
-    .populate("size brand category");
+    .populate("size brand category vendor");
 
   res.json({ products, pageCount });
 });
